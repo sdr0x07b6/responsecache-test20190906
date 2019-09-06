@@ -11,6 +11,10 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/users', function () {
+    return ['User1', 'User2', 'User3'];
+})->middleware('cacheResponse:users');
+
+Route::get('/products', function () {
+    return ['Product1', 'Product2', 'Product3'];
+})->middleware('cacheResponse:products');
