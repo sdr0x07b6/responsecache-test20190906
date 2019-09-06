@@ -3,19 +3,37 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Config;
+use Illuminate\Support\Facades\Cache;
+use Spatie\ResponseCache\Facades\ResponseCache;
+
 
 class ExampleTest extends TestCase
 {
     /**
-     * A basic test example.
-     *
-     * @return void
+     * @test
      */
-    public function testBasicTest()
+    public function clearByTag()
     {
-        $response = $this->get('/');
+        $header = Config::get('responsecache.cache_time_header_name');
 
-        $response->assertStatus(200);
+        // Ignore the CACHE_DRIVER setting in phpunit.xml and use Redis
+        Config::set('cache.default', 'redis');
+
+
+        // Clear all cache as initialization
+        ResponseCache::clear();
+
+        // Create a cache for "users" and "products"
+        $this->get('/users');
+        $this->get('/products');
+
+        // Delete the "users" cache by tag
+        // ResponseCache::clear(['users']); // Fail
+        Cache::tags('users')->flush(); // Pass
+
+        // Response is only cached for "products"
+        $res = $this->get('/users')->assertHeaderMissing($header);
+        $this->get('/products')->assertHeader($header);
     }
 }
